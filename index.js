@@ -7,14 +7,7 @@ const cors = require('cors')
 const Person = require('./models/person')
 
 
-
-
-
-
-
-
-
-
+app.use(cors())
 
 app.use(express.json())
 app.use(express.static('build'))
@@ -31,7 +24,7 @@ app.use(morgan(function (tokens, req, res) {
     ].join(' ')
 }))
 
-app.use(cors())
+
 
 
 
@@ -88,7 +81,7 @@ app.get('/api/persons/:id', (req, res, next) => {
     
 })
 
-app.post('/api/persons/', (req, res) => {
+app.post('/api/persons/', (req, res, next) => {
     
     const body = req.body
     
@@ -103,6 +96,7 @@ app.post('/api/persons/', (req, res) => {
             res.json(result)
             mongoose.connection.close()
         })
+        .catch(error => next(error))
 
     
 })
@@ -147,9 +141,10 @@ app.use(unknownEndpoint)
 
 const errorHandler = (error, req, res, next) => {
     console.error(error.message)
-
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message})
     }
 
     next(error)
